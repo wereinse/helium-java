@@ -16,6 +16,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -75,6 +76,7 @@ public class HealthzController {
    *        Object{@literal <}{@literal <}{@literal <}
    *        returned with status information for overall execution and discrete calls.
    */
+  @Cacheable(value = "responseCache")
   @GetMapping(value = "/ietf", produces = "application/health+json")
   public Mono<ResponseEntity<LinkedHashMap<String, Object>>>  ietfHealthCheck()
       throws CosmosClientException {
