@@ -32,41 +32,42 @@ public class ConfigurationService implements IConfigurationService {
   @Autowired
   public ConfigurationService(IKeyVaultService kvService, IEnvironmentReader envReader)
       throws InterruptedException {
-
     int maxRetries = 10;
     int retries = 0;
 
-    while (retries <= maxRetries) {
+    environmentReader = envReader;
+    String authType = environmentReader.getAuthType();
+    System.out.println("authType is " + authType);
 
+    while (retries <= maxRetries) {
+      System.out.println("number of retries " + retries);
+      try {
         if (kvService == null) {
           logger.info("keyVaultService is null");
           System.exit(-1);
         }
 
         keyVaultService = kvService;
-        environmentReader = envReader;
-
-        String authType = environmentReader.getAuthType();
-        System.out.println("authType is " + authType);
-
-        retries++;
-        System.out.println("number of retries " + retries);
-        if (authType.contains("CLI") && retries <= maxRetries) {
-          System.out.println("Key Vault: Retry");
-          // wait 1 second and retry (continue while loop)
-
-          System.out.println("checkstart " + DateTime.now().getMillis());
-          // wait(1000);
-          Thread.sleep(1000);
-          System.out.println("checkend " + DateTime.now().getMillis());
-        }
 
         Map<String, String> secrets = keyVaultService.getSecrets();
         logger.info("Secrets are " + (secrets == null ? "NULL" : "NOT NULL"));
         configEntries = secrets;
-        //return;
+        return;
 
+      } catch (Exception ex) {
+        retries++;
+        logger.info("number of retries " + retries);
 
+        if (authType.contains("MSI") && retries <= maxRetries) {
+          logger.info("Key Vault: Retry");
+
+          System.out.println("checkstart " + DateTime.now().getMillis());
+          Thread.sleep(1000);
+          System.out.println("checkend " + DateTime.now().getMillis());
+        } else {
+          throw new Error("Failed to connect to Key Vault with MSI");
+        }
+      }
     }
   }
 }
