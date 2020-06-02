@@ -36,8 +36,8 @@ public class ConfigurationService implements IConfigurationService {
     int maxRetries = 10;
     int retries = 0;
 
-    while (retries < maxRetries) {
-      try {
+    while (retries <= maxRetries) {
+
         if (kvService == null) {
           logger.info("keyVaultService is null");
           System.exit(-1);
@@ -50,7 +50,8 @@ public class ConfigurationService implements IConfigurationService {
         System.out.println("authType is " + authType);
 
         retries++;
-        if (authType.contains("CLI") && retries < maxRetries) {
+        System.out.println("number of retries " + retries);
+        if (authType.contains("CLI") && retries <= maxRetries) {
           System.out.println("Key Vault: Retry");
           // wait 1 second and retry (continue while loop)
 
@@ -63,30 +64,9 @@ public class ConfigurationService implements IConfigurationService {
         Map<String, String> secrets = keyVaultService.getSecrets();
         logger.info("Secrets are " + (secrets == null ? "NULL" : "NOT NULL"));
         configEntries = secrets;
-        return;
+        //return;
 
-      } catch (Exception ex) {
-        logger.info(
-            "ConfigurationService catch "
-                + keyVaultService.toString()
-                + "message "
-                + ex.getMessage());
-        String authType = environmentReader.getAuthType();
-        logger.info("authType is " + authType);
 
-        if (authType.contains("CLI") && DateTime.now().getMillisOfSecond() <= 50) {
-          logger.info("Key Vault: Retry");
-          // wait 1 second and retry (continue while loop)
-
-          logger.info("start " + DateTime.now().getMillis());
-          wait(1);
-          logger.info("end " + DateTime.now().getMillis());
-
-        } else {
-          logger.error("Failed to connect to Key Vault with MSI " + ex.getMessage());
-          return;
-        }
-      }
     }
   }
 }
